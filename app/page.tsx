@@ -25,20 +25,27 @@ const PROVINCE_DATA = {
 
 const MapLegend = () => {
   return (
-    <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-xl z-[1000] min-w-[180px] border border-gray-100 font-sans">
-      <h4 className="font-bold mb-3 text-gray-800 text-sm border-b pb-2">ระดับคะแนน</h4>
-      <div className="space-y-2 text-xs">
-        <div className="flex items-center">
-          <span className="w-3 h-3 rounded-full bg-[#4CAF50] mr-3 shadow-sm ring-1 ring-gray-200"></span>
-          <span className="text-gray-600 font-medium">70+ (ดีมาก)</span>
+    <div className="absolute bottom-6 right-6 bg-white p-4 rounded-lg shadow-lg z-[1000] min-w-[200px] border border-gray-200 font-sans">
+      <h4 className="font-bold mb-2 text-gray-800 text-xs uppercase tracking-wider">Climate Resilience Index</h4>
+      
+      {/* Color Scale Bar */}
+      <div className="w-full h-4 rounded-full bg-gradient-to-r from-[#F44336] via-[#FFEB3B] to-[#1B5E20] mb-1 border border-gray-300"></div>
+      
+      <div className="flex justify-between text-[10px] text-gray-500 font-medium">
+        <span>0 (ต่ำ)</span>
+        <span>50</span>
+        <span>100 (สูง)</span>
+      </div>
+      
+      <div className="mt-3 space-y-1">
+        <div className="flex items-center text-[10px] text-gray-600">
+           <span className="w-2 h-2 rounded-full bg-[#1B5E20] mr-2"></span> 80-100: ดีเยี่ยม
         </div>
-        <div className="flex items-center">
-          <span className="w-3 h-3 rounded-full bg-[#FBC02D] mr-3 shadow-sm ring-1 ring-gray-200"></span>
-          <span className="text-gray-600 font-medium">60-69 (ปานกลาง)</span>
+        <div className="flex items-center text-[10px] text-gray-600">
+           <span className="w-2 h-2 rounded-full bg-[#4CAF50] mr-2"></span> 60-79: ดี
         </div>
-        <div className="flex items-center">
-          <span className="w-3 h-3 rounded-full bg-[#D32F2F] mr-3 shadow-sm ring-1 ring-gray-200"></span>
-          <span className="text-gray-600 font-medium">&lt; 60 (ต้องปรับปรุง)</span>
+        <div className="flex items-center text-[10px] text-gray-600">
+           <span className="w-2 h-2 rounded-full bg-[#F44336] mr-2"></span> 0-39: ต้องปรับปรุง
         </div>
       </div>
     </div>

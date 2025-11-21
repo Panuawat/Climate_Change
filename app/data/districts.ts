@@ -1,4 +1,5 @@
-// ข้อมูลจำลองสำหรับใช้งานทั้งหน้า Map และหน้า Detail
+// app/data/districts.ts
+
 export interface DistrictData {
   id: number;
   name: string;
