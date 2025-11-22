@@ -1,16 +1,14 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Sidebar from '@/app/components/Sidebar'; 
+import Sidebar from '@/app/components/Sidebar';
 import { ShieldAlert, Activity, Sprout, Users, Menu } from 'lucide-react';
-import { DISTRICTS_DATA, DistrictData } from '@/app/data/districts';
-import { useState, useMemo } from 'react';
+import { DistrictData } from '@/app/data/districts';
+import { loadDistricts } from '@/app/utils/districts';
+import { useState, useMemo, useEffect } from 'react';
 
-interface MapProps {
-  districts: DistrictData[];
-}
-
-const MapWithNoSSR = dynamic<MapProps>(() => import('@/app/components/Map'), { 
+// Map component now fetches its own data, so we don't need to pass props
+const MapWithNoSSR = dynamic(() => import('@/app/components/Map'), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 animate-pulse">กำลังโหลดแผนที่...</div>
 });
@@ -36,13 +34,36 @@ const MapLegend = () => {
 
 export default function Home() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [districts, setDistricts] = useState<DistrictData[]>([]);
 
-  // --- คำนวณข้อมูลจังหวัดอัตโนมัติจาก DISTRICTS_DATA ---
+  // Load real data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await loadDistricts();
+        setDistricts(data);
+      } catch (error) {
+        console.error("Failed to load districts for sidebar:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // --- คำนวณข้อมูลจังหวัดอัตโนมัติจาก districts state ---
   const provinceData = useMemo(() => {
-    const count = DISTRICTS_DATA.length;
-    
+    if (districts.length === 0) {
+      return {
+        name: "จังหวัดขอนแก่น",
+        avgScore: 0,
+        districtCount: 0,
+        categories: []
+      };
+    }
+
+    const count = districts.length;
+
     // 1. หาผลรวมคะแนนทั้งหมด
-    const total = DISTRICTS_DATA.reduce((acc, curr) => {
+    const total = districts.reduce((acc, curr) => {
       return {
         score: acc.score + curr.score,
         disaster: acc.disaster + curr.details.disaster,
@@ -58,55 +79,55 @@ export default function Home() {
       avgScore: parseFloat((total.score / count).toFixed(1)), // คะแนนรวมเฉลี่ย
       districtCount: count,
       categories: [
-        { 
-          id: 1, 
-          name: "ภัยพิบัติและอันตรายจากธรรมชาติ", 
+        {
+          id: 1,
+          name: "ภัยพิบัติและอันตรายจากธรรมชาติ",
           score: parseFloat((total.disaster / count).toFixed(0)), // ปัดเศษคะแนนรายด้าน
-          icon: <ShieldAlert size={24} /> 
+          icon: <ShieldAlert size={24} />
         },
-        { 
-          id: 2, 
-          name: "ศักยภาพการรับมือการเปลี่ยนแปลง", 
-          score: parseFloat((total.potential / count).toFixed(0)), 
-          icon: <Activity size={24} /> 
+        {
+          id: 2,
+          name: "ศักยภาพการรับมือการเปลี่ยนแปลง",
+          score: parseFloat((total.potential / count).toFixed(0)),
+          icon: <Activity size={24} />
         },
-        { 
-          id: 3, 
-          name: "ทรัพยากรธรรมชาติ", 
-          score: parseFloat((total.resource / count).toFixed(0)), 
-          icon: <Sprout size={24} /> 
+        {
+          id: 3,
+          name: "ทรัพยากรธรรมชาติ",
+          score: parseFloat((total.resource / count).toFixed(0)),
+          icon: <Sprout size={24} />
         },
-        { 
-          id: 4, 
-          name: "ความพร้อมทางด้านสังคมและเศรษฐกิจ", 
-          score: parseFloat((total.social / count).toFixed(0)), 
-          icon: <Users size={24} /> 
+        {
+          id: 4,
+          name: "ความพร้อมทางด้านสังคมและเศรษฐกิจ",
+          score: parseFloat((total.social / count).toFixed(0)),
+          icon: <Users size={24} />
         },
       ]
     };
-  }, []); // ทำงานครั้งเดียวตอนโหลด หรือตอน DISTRICTS_DATA เปลี่ยน
+  }, [districts]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-100 relative">
-      
-      <Sidebar 
-        provinceData={provinceData} // ส่งข้อมูลที่คำนวณแล้วเข้าไป
-        isOpen={isSidebarOpen} 
+
+      <Sidebar
+        provinceData={provinceData}
+        isOpen={isSidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      
+
       <div className="flex-grow relative h-full w-full">
-        
-        <button 
+
+        <button
           onClick={() => setSidebarOpen(true)}
           className="lg:hidden absolute bottom-6 left-4 z-[2000] bg-green-600 text-white p-3 rounded-full shadow-xl hover:bg-green-700 transition-all active:scale-95 flex items-center justify-center border-2 border-white cursor-pointer"
           aria-label="Open Menu"
         >
           <Menu size={24} />
         </button>
-        
-        <MapWithNoSSR districts={DISTRICTS_DATA} />
-        
+
+        <MapWithNoSSR />
+
         <MapLegend />
       </div>
     </div>
