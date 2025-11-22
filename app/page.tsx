@@ -4,30 +4,16 @@ import dynamic from 'next/dynamic';
 import Sidebar from '@/app/components/Sidebar'; 
 import { ShieldAlert, Activity, Sprout, Users, Menu } from 'lucide-react';
 import { DISTRICTS_DATA, DistrictData } from '@/app/data/districts';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
-// Interface สำหรับ Props ของ Map
 interface MapProps {
   districts: DistrictData[];
 }
 
-// Dynamic Import
 const MapWithNoSSR = dynamic<MapProps>(() => import('@/app/components/Map'), { 
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 animate-pulse">กำลังโหลดแผนที่...</div>
 });
-
-const PROVINCE_DATA = {
-  name: "จังหวัดขอนแก่น",
-  avgScore: 61.9,
-  districtCount: DISTRICTS_DATA.length,
-  categories: [
-    { id: 1, name: "ภัยพิบัติและอันตรายจากธรรมชาติ", score: 65, icon: <ShieldAlert size={24} /> },
-    { id: 2, name: "ศักยภาพการรับมือการเปลี่ยนแปลง", score: 72, icon: <Activity size={24} /> },
-    { id: 3, name: "ทรัพยากรธรรมชาติ", score: 58, icon: <Sprout size={24} /> },
-    { id: 4, name: "ความพร้อมทางด้านสังคมและเศรษฐกิจ", score: 68, icon: <Users size={24} /> },
-  ]
-};
 
 const MapLegend = () => {
   return (
@@ -51,32 +37,75 @@ const MapLegend = () => {
 export default function Home() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
+  // --- คำนวณข้อมูลจังหวัดอัตโนมัติจาก DISTRICTS_DATA ---
+  const provinceData = useMemo(() => {
+    const count = DISTRICTS_DATA.length;
+    
+    // 1. หาผลรวมคะแนนทั้งหมด
+    const total = DISTRICTS_DATA.reduce((acc, curr) => {
+      return {
+        score: acc.score + curr.score,
+        disaster: acc.disaster + curr.details.disaster,
+        potential: acc.potential + curr.details.potential,
+        resource: acc.resource + curr.details.resource,
+        social: acc.social + curr.details.social,
+      };
+    }, { score: 0, disaster: 0, potential: 0, resource: 0, social: 0 });
+
+    // 2. หารด้วยจำนวนอำเภอเพื่อหาค่าเฉลี่ย (ทศนิยม 1 ตำแหน่ง)
+    return {
+      name: "จังหวัดขอนแก่น",
+      avgScore: parseFloat((total.score / count).toFixed(1)), // คะแนนรวมเฉลี่ย
+      districtCount: count,
+      categories: [
+        { 
+          id: 1, 
+          name: "ภัยพิบัติและอันตรายจากธรรมชาติ", 
+          score: parseFloat((total.disaster / count).toFixed(0)), // ปัดเศษคะแนนรายด้าน
+          icon: <ShieldAlert size={24} /> 
+        },
+        { 
+          id: 2, 
+          name: "ศักยภาพการรับมือการเปลี่ยนแปลง", 
+          score: parseFloat((total.potential / count).toFixed(0)), 
+          icon: <Activity size={24} /> 
+        },
+        { 
+          id: 3, 
+          name: "ทรัพยากรธรรมชาติ", 
+          score: parseFloat((total.resource / count).toFixed(0)), 
+          icon: <Sprout size={24} /> 
+        },
+        { 
+          id: 4, 
+          name: "ความพร้อมทางด้านสังคมและเศรษฐกิจ", 
+          score: parseFloat((total.social / count).toFixed(0)), 
+          icon: <Users size={24} /> 
+        },
+      ]
+    };
+  }, []); // ทำงานครั้งเดียวตอนโหลด หรือตอน DISTRICTS_DATA เปลี่ยน
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-100 relative">
       
-      {/* Sidebar */}
       <Sidebar 
-        provinceData={PROVINCE_DATA} 
+        provinceData={provinceData} // ส่งข้อมูลที่คำนวณแล้วเข้าไป
         isOpen={isSidebarOpen} 
         onClose={() => setSidebarOpen(false)}
       />
       
       <div className="flex-grow relative h-full w-full">
         
-        {/* Map อยู่ก่อน */}
-        <MapWithNoSSR districts={DISTRICTS_DATA} />
-        
-        {/* ปุ่มเปิดเมนู: ย้ายมาไว้หลัง Map และเพิ่ม z-index สูงๆ (z-[2000]) */}
         <button 
-          onClick={() => {
-            console.log("Menu Clicked!"); // Debug ดูได้ใน Console
-            setSidebarOpen(true);
-          }}
+          onClick={() => setSidebarOpen(true)}
           className="lg:hidden absolute bottom-6 left-4 z-[2000] bg-green-600 text-white p-3 rounded-full shadow-xl hover:bg-green-700 transition-all active:scale-95 flex items-center justify-center border-2 border-white cursor-pointer"
           aria-label="Open Menu"
         >
           <Menu size={24} />
         </button>
+        
+        <MapWithNoSSR districts={DISTRICTS_DATA} />
         
         <MapLegend />
       </div>

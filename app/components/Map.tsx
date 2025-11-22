@@ -1,7 +1,6 @@
 'use client';
 
-// 1. Import ZoomControl เพิ่มเข้ามา
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from 'react-leaflet'; // ลบ ZoomControl ออก
 import L from 'leaflet';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
@@ -115,8 +114,8 @@ const Map = ({ districts }: MapProps) => {
   return (
     <div className="relative h-full w-full bg-[#f8f9fa]">
       
-      {/* Filter Panel ยังคงอยู่ที่มุมซ้ายบน (top-4 left-4) */}
-      <div className={`absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-xl transition-all duration-300 flex flex-col font-sans border border-gray-200 ${isOpen ? 'w-72 h-[80%]' : 'w-12 h-12 overflow-hidden'}`}>
+      {/* --- 1. ย้าย Filter Panel ไปมุมขวาบน (right-4) --- */}
+      <div className={`absolute top-4 right-4 z-[1000] bg-white rounded-lg shadow-xl transition-all duration-300 flex flex-col font-sans border border-gray-200 ${isOpen ? 'w-72 h-[80%]' : 'w-12 h-12 overflow-hidden'}`}>
         
         <div 
           className="p-3 bg-gray-800 text-white flex items-center justify-between cursor-pointer"
@@ -199,13 +198,12 @@ const Map = ({ districts }: MapProps) => {
         center={position} 
         zoom={9} 
         scrollWheelZoom={true}
-        zoomControl={false} /* 2. ปิด Zoom Default (ที่อยู่มุมซ้ายบน) */
+        // 2. ลบ zoomControl={false} ออก เพื่อให้ปุ่ม Zoom มาตรฐาน (ซ้ายบน) กลับมา
         style={{ height: '100%', width: '100%', background: '#f0f0f0' }}
       >
         <MapController setMap={setMap} />
         
-        {/* 3. ใส่ ZoomControl ใหม่ที่มุมขวาล่าง */}
-        <ZoomControl position="topright" />
+        {/* 3. ลบ <ZoomControl /> ที่เป็นต้นเหตุของ Error ออก */}
 
         <TileLayer
           attribution='&copy; CARTO'
