@@ -1,12 +1,12 @@
-import { Prompt } from "next/font/google";
+import { IBM_Plex_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import React from "react"; // import React
 
-const prompt = Prompt({
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
   subsets: ["thai", "latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-prompt",
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+  variable: "--font-ibm-plex-sans-thai",
 });
 
 export const metadata = {
@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body className={`${prompt.variable} font-sans bg-gray-100`}>
+      <body className={`${ibmPlexSansThai.variable} font-sans bg-gray-100`}>
         {children}
       </body>
     </html>
