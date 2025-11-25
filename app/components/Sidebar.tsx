@@ -60,13 +60,13 @@ const Sidebar = ({ provinceData, isOpen, onClose }: SidebarProps) => {
         </div>
 
         {/* --- 2. Header Section --- */}
-        <div className="p-6 bg-[#E8F5E9] text-green-900 relative shrink-0">
+        <div className="p-4 lg:p-6 bg-[#E8F5E9] text-green-900 relative shrink-0">
           <div className="flex justify-between items-start mb-2">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-sm font-semibold text-gray-500">ภาพรวมจังหวัดขอนแก่น</h2>
               </div>
-              <h1 className="text-6xl font-bold text-[#2E7D32] tracking-tighter">{provinceData.avgScore}</h1>
+              <h1 className="text-5xl lg:text-6xl font-bold text-[#2E7D32] tracking-tighter">{provinceData.avgScore}</h1>
               <p className="text-xs text-gray-500 mt-1">คะแนนเฉลี่ยจังหวัด</p>
             </div>
 

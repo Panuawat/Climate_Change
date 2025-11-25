@@ -18,7 +18,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 // Helper Component (Card) for detail rows
 const DetailCard = ({ icon, title, score, desc }: { icon: React.ReactNode; title: string; score: number; desc: string }) => {
@@ -43,6 +43,8 @@ export default function DistrictDetail() {
   const router = useRouter();
   const params = useParams();
   const [district, setDistrict] = useState<DistrictData | null>(null);
+  const [allDistricts, setAllDistricts] = useState<DistrictData[]>([]);
+  const [compareId, setCompareId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +52,7 @@ export default function DistrictDetail() {
     const fetch = async () => {
       try {
         const data = await loadDistricts();
+        setAllDistricts(data);
         const d = data.find((item) => item.id === Number(params.id));
         if (!d) {
           setError('ไม่พบข้อมูลอำเภอนี้');
@@ -64,6 +67,11 @@ export default function DistrictDetail() {
     };
     fetch();
   }, [params.id]);
+
+  // Prepare comparison data
+  const compareDistrict = useMemo(() =>
+    allDistricts.find(d => d.id.toString() === compareId),
+    [allDistricts, compareId]);
 
   if (loading) {
     return (
@@ -84,19 +92,38 @@ export default function DistrictDetail() {
     );
   }
 
-  // Prepare bar chart data
   const BAR_DATA = [
-    { name: 'มุมมองปชช.', score: district.radar[4].A },
-    { name: 'สังคม-ศก.', score: district.details.social },
-    { name: 'ทรัพยากรฯ', score: district.details.resource },
-    { name: 'ศักยภาพฯ', score: district.details.potential },
-    { name: 'ภัยธรรมชาติ', score: district.details.disaster },
+    {
+      name: 'มุมมองปชช.',
+      current: district.radar[4].A,
+      compare: compareDistrict?.radar[4].A ?? 0
+    },
+    {
+      name: 'สังคม-ศก.',
+      current: district.details.social,
+      compare: compareDistrict?.details.social ?? 0
+    },
+    {
+      name: 'ทรัพยากรฯ',
+      current: district.details.resource,
+      compare: compareDistrict?.details.resource ?? 0
+    },
+    {
+      name: 'ศักยภาพฯ',
+      current: district.details.potential,
+      compare: compareDistrict?.details.potential ?? 0
+    },
+    {
+      name: 'ภัยธรรมชาติ',
+      current: district.details.disaster,
+      compare: compareDistrict?.details.disaster ?? 0
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Header */}
-      <header className="bg-[#4CAF50] text-white p-6 shadow-md">
+      <header className="bg-[#4CAF50] text-white p-4 lg:p-6 shadow-md">
         <div className="max-w-7xl mx-auto">
           <button
             onClick={() => router.back()}
@@ -104,29 +131,29 @@ export default function DistrictDetail() {
           >
             <ArrowLeft size={16} /> กลับ
           </button>
-          <div className="flex items-center gap-2 opacity-90 text-sm mb-1">
+          <div className="flex items-center gap-2 opacity-90 text-xs lg:text-sm mb-1">
             <MapPin size={14} />
             <span>อำเภอ &gt; {district.name}</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2 tracking-tight">{district.name}</h1>
-          <p className="text-green-100 font-light text-sm">
+          <h1 className="text-2xl lg:text-4xl font-bold mb-2 tracking-tight">{district.name}</h1>
+          <p className="text-green-100 font-light text-xs lg:text-sm">
             Dashboard วิเคราะห์ความพร้อมรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ
           </p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <main className="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
         {/* Column 1: Score & Radar */}
-        <div className="lg:col-span-3 flex flex-col gap-6">
+        <div className="lg:col-span-3 flex flex-col gap-4 lg:gap-6">
           {/* Score Card */}
-          <div className="bg-gradient-to-br from-[#43A047] to-[#2E7D32] text-white rounded-xl p-6 shadow-lg flex flex-col justify-between min-h-[140px] relative overflow-hidden">
+          <div className="bg-gradient-to-br from-[#43A047] to-[#2E7D32] text-white rounded-xl p-4 lg:p-6 shadow-lg flex flex-col justify-between min-h-[120px] lg:min-h-[140px] relative overflow-hidden">
             <div className="flex justify-between items-start z-10">
               <span className="bg-white/20 p-1.5 rounded mb-2"><Users size={20} /></span>
             </div>
             <div className="z-10">
-              <p className="text-sm opacity-90">ดัชนีความพร้อมโดยรวม</p>
-              <h2 className="text-5xl font-bold mt-1">{district.score}</h2>
+              <p className="text-xs lg:text-sm opacity-90">ดัชนีความพร้อมโดยรวม</p>
+              <h2 className="text-4xl lg:text-5xl font-bold mt-1">{district.score}</h2>
             </div>
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
           </div>
@@ -149,8 +176,8 @@ export default function DistrictDetail() {
         </div>
 
         {/* Column 2: Detail Cards */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <h3 className="font-bold text-xl text-gray-800 mb-2 flex items-center gap-2">รายละเอียดตามมิติ</h3>
+        <div className="lg:col-span-5 flex flex-col gap-3 lg:gap-4">
+          <h3 className="font-bold text-lg lg:text-xl text-gray-800 mb-2 flex items-center gap-2">รายละเอียดตามมิติ</h3>
           <DetailCard
             icon={<CloudRain className="text-gray-500" />}
             title="ภัยพิบัติและอันตรายจากธรรมชาติ"
@@ -178,25 +205,96 @@ export default function DistrictDetail() {
         </div>
 
         {/* Column 3: Bar Chart */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm h-[380px] border border-gray-100">
-            <h3 className="font-bold text-gray-800 mb-1">คะแนนเปรียบเทียบ</h3>
-            <p className="text-xs text-gray-500 mb-6">ในแต่ละด้านที่มีความใกล้เคียงกัน</p>
-            <ResponsiveContainer width="100%" height="85%">
+        <div className="lg:col-span-4 flex flex-col gap-4 lg:gap-6">
+          <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm h-[380px] border border-gray-100">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="font-bold text-gray-800 mb-1">คะแนนเปรียบเทียบ</h3>
+                <p className="text-xs text-gray-500">เทียบกับ: {compareDistrict ? compareDistrict.name : 'เลือกอำเภอเพื่อเปรียบเทียบ'}</p>
+              </div>
+              <div className="relative">
+                <select
+                  className="text-xs text-gray-500 border border-gray-300 rounded-lg p-2 pr-8 appearance-none bg-white focus:ring-2 focus:ring-green-500 focus:outline-none cursor-pointer max-w-[120px] lg:max-w-none truncate"
+                  value={compareId}
+                  onChange={(e) => setCompareId(e.target.value)}
+                >
+                  <option value="">-- เลือกอำเภอเทียบ --</option>
+                  {allDistricts
+                    .filter(d => d.id !== district.id)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))
+                  }
+                </select>
+              </div>
+            </div>
+
+            <ResponsiveContainer width="100%" height="80%">
               <BarChart data={BAR_DATA} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-15} textAnchor="end" />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
-                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                <Bar dataKey="score" fill="#1B5E20" radius={[4, 4, 0, 0]} barSize={40} />
+                <Tooltip
+                  cursor={{ fill: 'transparent' }}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100 text-xs">
+                          <p className="font-bold text-gray-800 mb-2">{label}</p>
+                          {payload.map((entry: any, index: number) => {
+                            const isCurrent = entry.name === 'current';
+                            const name = isCurrent ? district.name : (compareDistrict?.name || 'Compare');
+                            const color = isCurrent ? '#1B5E20' : '#afb8c1ff';
+
+                            return (
+                              <div key={index} className="flex items-center gap-2 mb-1">
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                                <span style={{ color: color }} className="font-medium">
+                                  {name}: {entry.value}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="current" name="current" fill="#4CAF50" radius={[4, 4, 0, 0]} barSize={30} />
+                {compareId && (
+                  <Bar dataKey="compare" name="compare" fill="#afb8c1ff" radius={[4, 4, 0, 0]} barSize={30} />
+                )}
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm h-[200px] border border-gray-100 flex flex-col items-center justify-center text-gray-300">
-            <h3 className="font-bold text-gray-400 mb-1 text-sm w-full text-left">คะแนนเปรียบเทียบ (รายอำเภอ)</h3>
-            <div className="flex-grow flex items-center justify-center w-full">
-              <div className="w-full h-20 bg-gray-50 rounded flex items-center justify-center">[กราฟเปรียบเทียบอื่นๆ]</div>
-            </div>
+
+          {/* Legend / Summary */}
+          <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm h-auto border border-gray-100 flex flex-col justify-center">
+            <h3 className="font-bold text-gray-700 text-sm mb-3">สรุปผลการเปรียบเทียบ</h3>
+            {compareDistrict ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-100">
+                  <span className="text-xs font-bold text-green-800">{district.name}</span>
+                  <span className="text-lg font-bold text-green-600">{district.score}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <span className="text-xs font-bold text-gray-600">{compareDistrict.name}</span>
+                  <span className="text-lg font-bold text-gray-500">{compareDistrict.score}</span>
+                </div>
+                <div className="text-xs text-center text-gray-400 mt-2">
+                  {district.score > compareDistrict.score
+                    ? `${district.name} มีความพร้อมมากกว่า ${Math.abs(district.score - compareDistrict.score).toFixed(1)} คะแนน`
+                    : `${compareDistrict.name} มีความพร้อมมากกว่า ${Math.abs(compareDistrict.score - district.score).toFixed(1)} คะแนน`
+                  }
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 text-xs py-4">
+                เลือกอำเภอจากเมนูด้านบน<br />เพื่อดูผลวิเคราะห์เปรียบเทียบ
+              </div>
+            )}
           </div>
         </div>
       </main>
